@@ -1,0 +1,21 @@
+{
+  "name": "D'Jangkos Kasir",
+  "short_name": "D'Jangkos",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1e40af",
+  "theme_color": "#1e40af",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "djangkos_copier.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "djangkos_copier.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
