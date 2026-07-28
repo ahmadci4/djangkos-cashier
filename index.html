@@ -197,8 +197,10 @@
         #receipt-modal-content {
             background-image: radial-gradient(#F1F5F9 1px, transparent 1px);
             background-size: 20px 20px;
+            width: 100%;
+            max-width: 320px; /* PERBAIKAN 4: Dibatasi 320px agar responsif dan tidak terpotong di HP */
+            margin: 0 auto;
         }
-
         /* === KONFIGURASI PRINTER THERMAL (80mm/85mm) === */
         @media print {
             @page {
@@ -278,38 +280,37 @@
     <header class="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white shadow-lg z-40 flex-none relative">
         <div class="container mx-auto px-4 h-16 flex justify-between items-center">
             <!-- Logo & Status -->
+             <!-- Logo & Status -->
             <div class="flex items-center gap-3">
                 <button class="md:hidden text-white text-xl mr-2 focus:outline-none hover:rotate-90 transition duration-300" onclick="toggleMenu()">
                     <i class="fas fa-bars"></i>
                 </button>
                 <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center overflow-hidden shadow-lg border-2 border-white/50 rotate-3 hover:rotate-0 transition duration-300">
-                    <img src="djangkos_copier.jpeg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                    <img src="logo-djangkos.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
                     <span class="text-primary font-black text-xs hidden">DJ</span>
                 </div>
                 <div>
-                    <h1 class="font-extrabold text-xl leading-none tracking-tight drop-shadow-sm">D'JANGKOS <span id="status-badge" class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full ml-1 backdrop-blur-sm">...</span></h1>
-                    <p class="text-[10px] text-cyan-100 font-medium tracking-wide">Digital Printing & POS</p>
-                </div>
-            </div>
+                    <h1 class="font-extrabold text-xl leading-none tracking-tight drop-shadow-sm">D'JANGKOS <span id="status-badge" class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full ml-1 backdrop-blur-sm">Menghubungkan...</span></h1>
 
             <!-- Desktop Nav -->
-            <nav class="hidden md:flex bg-white/20 backdrop-blur-md p-1.5 rounded-2xl border border-white/10">
-                <button onclick="switchTab('kasir')" id="nav-kasir" class="px-4 py-2 text-sm rounded-xl transition active-tab font-bold">KASIR</button>
-                <button onclick="switchTab('database')" id="nav-database" class="px-4 py-2 text-sm rounded-xl hover:bg-white/20 transition font-bold">PRODUK</button>
-                <button onclick="switchTab('keranjang')" id="nav-keranjang" class="px-4 py-2 text-sm rounded-xl hover:bg-white/20 transition flex items-center gap-2 font-bold text-yellow-300 drop-shadow-sm">
+            <button onclick="switchTab('keranjang')" id="nav-keranjang" class="px-4 py-2 text-sm rounded-xl hover:bg-white/20 transition flex items-center gap-2 font-bold text-yellow-300 drop-shadow-sm">
                     <i class="fas fa-shopping-cart"></i> KERANJANG
                     <span id="nav-cart-badge" class="bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full hidden shadow-sm border-2 border-white">0</span>
                 </button>
                 <button onclick="switchTab('hutang')" id="nav-hutang" class="px-4 py-2 text-sm rounded-xl hover:bg-white/20 transition font-bold">HUTANG</button>
                 <button onclick="switchTab('riwayat')" id="nav-riwayat" class="px-4 py-2 text-sm rounded-xl hover:bg-white/20 transition font-bold">RIWAYAT</button>
+                <!-- PERBAIKAN 6: Tombol Navigasi Backup -->
+                <button onclick="switchTab('backup')" id="nav-backup" class="px-4 py-2 text-sm rounded-xl hover:bg-white/20 transition font-bold"><i class="fas fa-database"></i> BACKUP</button>
             </nav>
 
             <!-- Mobile Cart Icon -->
-            <button onclick="switchTab('keranjang')" class="md:hidden relative p-2 hover:bg-white/10 rounded-full transition">
-                <i class="fas fa-shopping-cart text-xl"></i>
-                <span id="mobile-cart-badge" class="absolute top-0 right-0 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold shadow-sm hidden border-2 border-white">0</span>
-            </button>
+            <button onclick="switchTab('database'); toggleMenu()" class="w-full text-left px-4 py-3 text-sm font-bold text-white hover:bg-white/10 rounded-xl flex items-center gap-3"><i class="fas fa-box w-6 text-center"></i> DATA PRODUK</button>
+                <button onclick="switchTab('hutang'); toggleMenu()" class="w-full text-left px-4 py-3 text-sm font-bold text-white hover:bg-white/10 rounded-xl flex items-center gap-3"><i class="fas fa-book w-6 text-center"></i> DATA HUTANG</button>
+                <button onclick="switchTab('riwayat'); toggleMenu()" class="w-full text-left px-4 py-3 text-sm font-bold text-white hover:bg-white/10 rounded-xl flex items-center gap-3"><i class="fas fa-history w-6 text-center"></i> RIWAYAT TRANSAKSI</button>
+                <button onclick="switchTab('backup'); toggleMenu()" class="w-full text-left px-4 py-3 text-sm font-bold text-white hover:bg-white/10 rounded-xl flex items-center gap-3"><i class="fas fa-cloud-download-alt w-6 text-center"></i> BACKUP DATA</button>
+            </div>
         </div>
+    </header>
 
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden absolute top-16 left-0 w-full bg-gradient-to-b from-blue-700 to-blue-900 border-t border-white/10 shadow-xl transition-all duration-300 origin-top z-50 rounded-b-3xl">
@@ -348,10 +349,10 @@
             </div>
 
             <!-- Grid Produk -->
-            <div id="product-list" class="flex-1 overflow-y-auto custom-scroll grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 pb-24 pt-2 px-1">
+           <div id="product-list" class="flex-1 overflow-y-auto custom-scroll grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 pb-24 pt-2 px-1">
                 <div class="col-span-full text-center mt-20" id="loading-indicator">
                     <i class="fas fa-circle-notch fa-spin text-3xl text-blue-200"></i>
-                    <p class="text-blue-300 font-bold mt-2 text-sm">Memuat Produk...</p>
+                    <p class="text-blue-300 font-bold mt-2 text-sm">Menghubungkan ke Cloud...</p>
                 </div>
             </div>
         </section>
@@ -361,8 +362,9 @@
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-100 mb-4 flex justify-between items-center">
                 <h2 class="font-bold text-dark text-lg"><i class="fas fa-box text-secondary mr-2"></i>Database Produk</h2>
                 <div class="text-xs font-bold bg-blue-100 text-primary px-3 py-1 rounded-full" id="db-total-count">... Item</div>
+            <div class="flex-1 overflow-auto bg-white rounded-2xl shadow-sm border border-blue-50 custom-scroll p-2">
+                <div id="debt-body" class="space-y-3"></div>
             </div>
-            <div id="db-list" class="flex-1 overflow-y-auto custom-scroll grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start pb-20 px-1"></div>
         </section>
 
         <!-- 3. TAB KERANJANG -->
@@ -457,6 +459,34 @@
                 <div id="debt-body" class="space-y-3"></div>
             </div>
         </section>
+        <!-- PERBAIKAN 6: HALAMAN TAB BACKUP DATA (Baru) -->
+        <section id="tab-backup" class="tab-content hidden h-full flex flex-col p-4 md:p-6 max-w-3xl mx-auto">
+            <div class="bg-white p-6 rounded-3xl shadow-lg border border-blue-100 text-center space-y-6">
+                <div>
+                    <i class="fas fa-cloud-download-alt text-6xl text-primary mb-4 block"></i>
+                    <h2 class="text-2xl font-black text-slate-800">Backup & Restore Data</h2>
+                    <p class="text-slate-500 text-sm mt-2">Amankan data produk dan riwayat transaksi Anda secara offline, atau pulihkan saat terjadi masalah.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="downloadBackup()" class="p-4 bg-blue-50 border-2 border-blue-200 rounded-2xl hover:bg-blue-100 transition group flex flex-col items-center justify-center gap-2">
+                        <i class="fas fa-download text-2xl text-blue-500 group-hover:scale-110 transition"></i>
+                        <span class="font-bold text-blue-700">Download Backup (.json)</span>
+                    </button>
+                    
+                    <div class="p-4 bg-orange-50 border-2 border-orange-200 rounded-2xl hover:bg-orange-100 transition group flex flex-col items-center justify-center gap-2 relative cursor-pointer">
+                        <!-- Input file diletakkan di atas agar bisa diklik -->
+                        <input type="file" id="upload-backup-file" accept=".json" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="uploadBackup(event)">
+                        <i class="fas fa-upload text-2xl text-orange-500 group-hover:scale-110 transition"></i>
+                        <span class="font-bold text-orange-700">Upload & Restore Data</span>
+                    </div>
+                </div>
+                
+                <div class="bg-red-50 text-red-600 p-4 rounded-xl text-xs font-bold border border-red-100 text-left">
+                    <i class="fas fa-exclamation-triangle mr-1"></i> Perhatian: Melakukan Upload akan MENAMBAHKAN data dari file ke database Cloud Anda. Pastikan file yang diupload adalah file backup yang benar.
+                </div>
+            </div>
+        </section>
 
     </main>
 
@@ -464,10 +494,14 @@
     <button onclick="toggleCalculator()" class="fixed bottom-24 right-6 bg-gradient-to-br from-gray-800 to-black text-white w-14 h-14 rounded-2xl shadow-2xl z-40 flex items-center justify-center transform transition hover:scale-110 border-2 border-white/20 hover:rotate-3">
         <i class="fas fa-calculator text-xl"></i>
     </button>
-    <div id="calculator-widget" class="fixed bottom-40 right-6 w-64 bg-slate-900 rounded-3xl shadow-2xl z-50 p-4 hidden border border-slate-700 backdrop-blur-xl bg-opacity-95">
-        <div class="bg-black/50 rounded-xl p-4 mb-3 text-right border border-white/10">
-            <div id="calc-display" class="text-3xl font-mono text-accent font-bold tracking-widest overflow-hidden">0</div>
+    <!-- ... existing code ... -->
+                <div class="flex gap-3">
+                    <button onclick="closeModal('modal-input-var')" class="flex-1 py-3.5 bg-slate-100 text-slate-500 rounded-xl font-bold text-xs hover:bg-slate-200 transition">BATAL</button>
+                    <button onclick="confirmAddToCart()" class="flex-1 py-3.5 bg-gradient-to-r from-secondary to-orange-400 text-white rounded-xl font-bold text-xs hover:shadow-lg hover:scale-[1.02] transition">MASUK KERANJANG</button>
+                </div>
+            </div>
         </div>
+    </div>
         <div class="grid grid-cols-4 gap-2">
             <button onclick="calcClear()" class="col-span-1 bg-red-500 text-white p-3 rounded-xl font-bold shadow-lg hover:bg-red-400">C</button>
             <button onclick="calcAppend('/')" class="bg-slate-700 text-white p-3 rounded-xl font-bold hover:bg-slate-600 shadow">/</button>
