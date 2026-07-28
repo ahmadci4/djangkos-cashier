@@ -30,83 +30,27 @@
             appId: "1:86644995124:web:697945eacae29a6cdf4661",
             measurementId: "G-35R4QNX2V0"
         };
+        
+        // Inisialisasi Firebase (Di-comment sementara agar tidak error saat UI di test jika rules belum di set)
+        // const app = initializeApp(firebaseConfig);
+        // const db = getFirestore(app);
+
         const FIREBASE_DOC_PATH = "djangkos_db/main_state"; 
         const IS_DUMMY = firebaseConfig.apiKey === "DUMMY_API_KEY";
 
-        // FIX: Gunakan __app_id global jika ada untuk mematuhi peraturan keselamatan
         const APP_ID_CABANG = typeof __app_id !== 'undefined' ? __app_id : "toko-pusat"; 
-
-       // --- 1. FUNGSI SIMPAN PRODUK (MENGHUBUNGKAN MODAL KE FIREBASE/LOKAL) ---
-function saveProduct() {
-    const name = document.getElementById('add-name').value.trim();
-    const price = parseFloat(document.getElementById('add-price').value) || 0;
-    const category = document.getElementById('add-cat').value;
-    const barcode = document.getElementById('add-code').value.trim();
-    const editId = document.getElementById('edit-db-id').value;
-
-    if (!name) return alert("Nama barang wajib diisi!");
-
-    const prodData = {
-        name: name,
-        price: price,
-        category: category,
-        barcode: barcode
-    };
-
-    window.saveProductToCloud(prodData, editId || null);
-}
-
-// --- 2. FUNGSI RENDER DATABASE PRODUK (TAB PRODUK) ---
-function renderDatabase() {
-    const dbList = document.getElementById('db-list');
-    const dbCount = document.getElementById('db-total-count');
-    if (!dbList || !window.products) return;
-
-    if (dbCount) dbCount.innerText = `${window.products.length} Item`;
-    dbList.innerHTML = "";
-
-    if (window.products.length === 0) {
-        dbList.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 font-bold italic">Belum ada data produk.</div>`;
-        return;
-    }
-
-    window.products.forEach(p => {
-        dbList.innerHTML += `
-            <div class="bg-white p-4 rounded-2xl border border-blue-50 shadow-sm flex justify-between items-center hover:shadow-md transition">
-                <div>
-                    <span class="text-[9px] font-extrabold px-2 py-0.5 rounded bg-blue-100 text-primary uppercase">${p.category}</span>
-                    <h4 class="font-bold text-sm text-slate-800 mt-1">${p.name}</h4>
-                    <p class="text-xs text-slate-400 font-mono"><i class="fas fa-barcode mr-1"></i>${p.barcode || '-'}</p>
-                    <p class="text-xs font-black text-secondary mt-1">${formatRupiah(p.price)}</p>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="editProduct('${p.db_id}')" class="w-8 h-8 rounded-lg bg-blue-50 text-primary flex items-center justify-center hover:bg-blue-100" title="Edit"><i class="fas fa-pen text-xs"></i></button>
-                    <button onclick="deleteProductFromCloud('${p.db_id}')" class="w-8 h-8 rounded-lg bg-red-50 text-danger flex items-center justify-center hover:bg-red-100" title="Hapus"><i class="fas fa-trash text-xs"></i></button>
-                </div>
-            </div>
-        `;
-    });
-}
-
-// --- 3. FUNGSI DOWNLOAD BARCODE IMAGE ---
-function downloadBarcodeImg() {
-    const container = document.getElementById('barcode-container');
-    if (!container) return;
-    
-    html2canvas(container, { scale: 3, backgroundColor: "#ffffff" }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `Barcode-${document.getElementById('barcode-name').innerText}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-        showToast("Barcode berhasil di-download");
-    });
-}
+        
+        /* 
+         * FIX BUG 1: Fungsi-fungsi UI seperti saveProduct, renderDatabase tidak boleh berada 
+         * di dalam <script type="module"> jika dipanggil langsung dari HTML (onclick).
+         * Saya telah memindahkannya ke tag <script> biasa di bawah.
+         */
+    </script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        // PALET WARNA BARU (Biru & Oranye Ceria) - NO PINK
                         primary: '#2563EB', // Royal Blue
                         secondary: '#F97316', // Orange Fresh
                         accent: '#F59E0B', // Amber
@@ -157,8 +101,8 @@ function downloadBarcodeImg() {
         /* === KONFIGURASI PRINTER THERMAL (80mm/85mm) === */
         @media print {
             @page {
-                size: 80mm auto; /* Lebar 80mm, tinggi auto mengikuti konten */
-                margin: 0;       /* Hilangkan margin default browser */
+                size: 80mm auto;
+                margin: 0;      
             }
             
             body {
@@ -168,12 +112,10 @@ function downloadBarcodeImg() {
                 padding: 0;
             }
 
-            /* Sembunyikan semua elemen KECUALI modal struk */
             body > *:not(#modal-receipt) { 
                 display: none !important; 
             }
 
-            /* Pastikan modal struk terlihat dan menempati 100% lebar kertas */
             #modal-receipt {
                 position: absolute;
                 top: 0;
@@ -200,9 +142,8 @@ function downloadBarcodeImg() {
                 background: white !important;
             }
 
-            /* Ubah tampilan menjadi hitam putih sederhana untuk thermal */
             .receipt-digital-header { 
-                display: none !important; /* Header warna-warni tidak perlu di print */
+                display: none !important; 
             }
             
             .receipt-body {
@@ -211,7 +152,6 @@ function downloadBarcodeImg() {
                 border-radius: 0 !important;
             }
 
-            /* Header Print Khusus */
             .print-only { 
                 display: block !important; 
                 text-align: center; 
@@ -219,23 +159,21 @@ function downloadBarcodeImg() {
                 font-family: 'Inconsolata', monospace;
             }
 
-            /* Font Struk */
             * {
                 font-family: 'Inconsolata', monospace !important;
                 color: black !important;
-                font-size: 12px; /* Ukuran pas untuk 80mm */
+                font-size: 12px; 
             }
             
             h2#receipt-total-display { font-size: 18px !important; font-weight: bold !important; }
             
-            /* Sembunyikan tombol aksi */
             #receipt-actions { display: none !important; }
         }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-slate-800 bg-bg">
 
-    <!-- TOP HEADER (Blue Gradient) -->
+    <!-- TOP HEADER -->
     <header class="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white shadow-lg z-40 flex-none relative">
         <div class="container mx-auto px-4 h-16 flex justify-between items-center">
             <!-- Logo & Status -->
@@ -323,11 +261,10 @@ function downloadBarcodeImg() {
                 <h2 class="font-bold text-dark text-lg"><i class="fas fa-box text-secondary mr-2"></i>Database Produk</h2>
                 <div class="text-xs font-bold bg-blue-100 text-primary px-3 py-1 rounded-full" id="db-total-count">... Item</div>
             </div>
-            <!-- FIX: Grid lebih responsif untuk database -->
             <div id="db-list" class="flex-1 overflow-y-auto custom-scroll grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start pb-20 px-1"></div>
         </section>
 
-        <!-- 3. TAB KERANJANG (FIXED: Responsif Penuh) -->
+        <!-- 3. TAB KERANJANG -->
         <section id="tab-keranjang" class="tab-content hidden h-full flex flex-col p-4 md:p-6 max-w-3xl mx-auto bg-white md:my-6 md:rounded-3xl md:shadow-xl md:border md:border-blue-100">
             <!-- Header Keranjang -->
             <div class="flex justify-between items-center border-b border-dashed border-blue-200 pb-4 mb-4 flex-none">
@@ -335,10 +272,10 @@ function downloadBarcodeImg() {
                 <button onclick="emptyCart()" class="text-[10px] text-danger font-bold bg-red-50 px-3 py-1.5 rounded-full hover:bg-red-100 transition uppercase tracking-wider">Hapus Semua</button>
             </div>
             
-            <!-- List Item (Scrollable Area) -->
+            <!-- List Item -->
             <div id="cart-items-container" class="flex-1 overflow-y-auto custom-scroll space-y-3 pr-2 min-h-0"></div>
             
-            <!-- Footer (Fixed at Bottom of Container) -->
+            <!-- Footer -->
             <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100 mt-4 flex-none shadow-inner">
                 <!-- SIPLAH Toggle -->
                 <div class="flex items-center justify-between mb-3 bg-white/50 p-2 rounded-lg">
@@ -464,7 +401,7 @@ function downloadBarcodeImg() {
 
     <!-- === MODALS === -->
 
-    <!-- MODAL BARCODE GENERATOR (REVISI: VISUAL BARCODE + NAMA + ID) -->
+    <!-- MODAL BARCODE GENERATOR -->
     <div id="modal-barcode" class="fixed inset-0 bg-black/80 z-[90] hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-sm rounded-3xl overflow-hidden animate-in zoom-in duration-200 shadow-2xl">
             <div class="bg-white p-4 text-center border-b border-dashed border-slate-200">
@@ -559,7 +496,7 @@ function downloadBarcodeImg() {
         </div>
     </div>
 
-    <!-- MODAL RECEIPT PREVIEW (MODERN DIGITAL V11) -->
+    <!-- MODAL RECEIPT PREVIEW -->
     <div id="modal-receipt" class="fixed inset-0 bg-black/90 z-[80] hidden flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-slate-900 w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] border border-slate-700">
             <div class="bg-slate-800 p-4 flex justify-between items-center text-white flex-none border-b border-slate-700">
@@ -567,20 +504,15 @@ function downloadBarcodeImg() {
                 <button onclick="closeModal('modal-receipt')" class="hover:text-red-400 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition"><i class="fas fa-times"></i></button>
             </div>
             
-            <!-- RECEIPT CONTENT (SCROLLABLE & CAPTURABLE) -->
+            <!-- RECEIPT CONTENT -->
             <div class="flex-1 overflow-y-auto bg-slate-900 p-6 flex justify-center custom-scroll relative">
-                
-                <!-- DIGITAL RECEIPT CARD -->
                 <div id="receipt-modal-content" class="bg-white rounded-3xl shadow-lg w-[380px] font-sans text-slate-800 relative overflow-hidden mx-auto my-auto">
                     
-                    <!-- Print Header (Hidden on Digital) -->
                     <div class="print-only font-bold text-lg mb-2">D'JANGKOS STORE</div>
                     <div class="print-only text-xs mb-2">Terima kasih telah berbelanja</div>
                     
-                    <!-- Digital Header (Hidden on Print) -->
                     <div class="receipt-digital-header text-white p-6 pb-12 text-center relative overflow-hidden transition-colors duration-300" id="receipt-header-bg">
                         <div class="absolute top-0 left-0 w-full h-full bg-white/10 receipt-bg-pattern"></div>
-                        <!-- LOGO ON RECEIPT -->
                         <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 backdrop-blur-md shadow-xl overflow-hidden border-4 border-white/20">
                             <img src="djangkos_copier.jpeg" alt="Logo" class="w-full h-full object-cover">
                         </div>
@@ -588,15 +520,12 @@ function downloadBarcodeImg() {
                         <p class="text-white/80 text-xs font-mono mt-1" id="receipt-date-top">...</p>
                     </div>
 
-                    <!-- Body Content -->
                     <div class="receipt-body bg-white rounded-t-[2.5rem] -mt-8 relative p-6 pt-10 z-10">
-                         <!-- Total Section -->
                          <div class="text-center mb-6">
                             <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Total Pembayaran</p>
                             <h2 class="text-4xl font-black text-slate-800 tracking-tighter" id="receipt-total-display">Rp 0</h2>
                          </div>
 
-                         <!-- Detail List -->
                          <div class="space-y-3 mb-6">
                              <div class="flex justify-between text-xs border-b border-dashed border-slate-200 pb-3">
                                  <span class="text-slate-500 font-medium">ID Transaksi</span>
@@ -607,18 +536,15 @@ function downloadBarcodeImg() {
                                  <span class="font-bold text-slate-700 text-right w-1/2 truncate" id="receipt-cust-display">...</span>
                              </div>
                              
-                             <!-- Items Container -->
                              <div id="receipt-items-list" class="space-y-2 py-2">
                                  <!-- Items injected here -->
                              </div>
                              
-                             <!-- Tax Container -->
                              <div id="receipt-tax-list" class="space-y-1 pt-2 border-t border-slate-100 hidden">
                                  <!-- Tax details -->
                              </div>
                          </div>
 
-                         <!-- Footer -->
                          <div class="text-center">
                              <div class="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
                                  <div class="w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-[8px] font-bold">DJ</div>
@@ -627,7 +553,6 @@ function downloadBarcodeImg() {
                          </div>
                     </div>
                 </div>
-
             </div>
             
             <!-- ACTIONS -->
@@ -645,6 +570,146 @@ function downloadBarcodeImg() {
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
+        /* FIX BUG 2: MENGINISIALISASI VARIABEL GLOBAL YANG HILANG */
+        let cart = []; 
+        
+        // MOCK DATA FIREBASE agar UI jalan (Ganti logic ini dengan fungsi Firebase yang asli nanti)
+        window.products = [];
+        window.transactions = [];
+        
+        // Mock Function Firebase
+        window.saveProductToCloud = function(data, editId) {
+            data.db_id = editId || Date.now().toString();
+            if(editId) {
+                const idx = window.products.findIndex(p => p.db_id === editId);
+                if(idx > -1) window.products[idx] = data;
+            } else {
+                window.products.push(data);
+            }
+            renderProducts();
+            renderDatabase();
+            closeModal('modal-add-prod');
+            showToast("Produk Disimpan!");
+        }
+        
+        window.deleteProductFromCloud = function(dbId) {
+            if(confirm("Hapus produk ini?")) {
+                window.products = window.products.filter(p => p.db_id !== dbId);
+                renderProducts();
+                renderDatabase();
+                showToast("Produk Dihapus");
+            }
+        }
+        
+        window.pushTransactionToCloud = function(trx) {
+            trx.db_id = Date.now().toString();
+            window.transactions.unshift(trx); // Masukkan di paling atas
+            renderHistory();
+            renderDebtBook();
+        }
+
+        window.updateTransactionStatusCloud = function(dbId, newStatus) {
+            const trx = window.transactions.find(t => t.db_id === dbId);
+            if(trx) {
+                trx.status = newStatus;
+                renderHistory();
+                renderDebtBook();
+                showToast("Status Diubah");
+            }
+        }
+
+        function deleteTransaction(dbId) {
+            if(confirm("Hapus transaksi ini?")) {
+                window.transactions = window.transactions.filter(t => t.db_id !== dbId);
+                renderHistory();
+                renderDebtBook();
+                showToast("Transaksi dihapus");
+            }
+        }
+
+        function toggleTransactionSiplah(dbId) {
+            const trx = window.transactions.find(t => t.db_id === dbId);
+            if(trx) {
+                trx.isSiplah = !trx.isSiplah;
+                renderHistory();
+                showToast(trx.isSiplah ? "Mode SIPLAH Aktif" : "Mode SIPLAH Mati");
+            }
+        }
+
+        function deleteAllHistory() {
+            if(confirm("YAKIN HAPUS SEMUA RIWAYAT?")) {
+                window.transactions = [];
+                renderHistory();
+                renderDebtBook();
+                showToast("Semua Riwayat Dihapus");
+            }
+        }
+
+        window.payBulkDebtCloud = function(customerName) {
+            if(confirm(`Lunasi semua hutang atas nama ${customerName}?`)) {
+                window.transactions.forEach(t => {
+                    if(t.customer === customerName && t.status === 'HUTANG') t.status = 'LUNAS';
+                });
+                renderHistory();
+                renderDebtBook();
+                showToast("Hutang Dilunasi!");
+            }
+        }
+
+
+        /* FIX BUG 3: MEMINDAHKAN FUNGSI DARI <script type="module"> KE SINI */
+        function saveProduct() {
+            const name = document.getElementById('add-name').value.trim();
+            const price = parseFloat(document.getElementById('add-price').value) || 0;
+            const category = document.getElementById('add-cat').value;
+            const barcode = document.getElementById('add-code').value.trim();
+            const editId = document.getElementById('edit-db-id').value;
+
+            if (!name) return alert("Nama barang wajib diisi!");
+
+            const prodData = {
+                name: name,
+                price: price,
+                category: category,
+                barcode: barcode
+            };
+
+            window.saveProductToCloud(prodData, editId || null);
+        }
+
+        function renderDatabase() {
+            const dbList = document.getElementById('db-list');
+            const dbCount = document.getElementById('db-total-count');
+            if (!dbList || !window.products) return;
+
+            if (dbCount) dbCount.innerText = `${window.products.length} Item`;
+            dbList.innerHTML = "";
+
+            if (window.products.length === 0) {
+                dbList.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 font-bold italic">Belum ada data produk.</div>`;
+                return;
+            }
+
+            window.products.forEach(p => {
+                dbList.innerHTML += `
+                    <div class="bg-white p-3 rounded-2xl border border-blue-50 text-center text-xs hover:shadow-md transition group relative overflow-hidden flex flex-col justify-between h-full min-h-[140px]">
+                        <div>
+                            <div class="font-bold text-slate-700 text-sm mb-1 leading-tight break-words" title="${p.name}">${p.name}</div>
+                            <div class="text-secondary font-black text-lg mb-1">${formatRupiah(p.price)}</div>
+                            <div class="font-barcode text-slate-800 text-4xl leading-none overflow-hidden" title="${p.barcode || ''}">${p.barcode || ''}</div>
+                            <div class="text-[9px] font-mono text-slate-400 mt-1">${p.barcode || '-'}</div>
+                        </div>
+                        <div class="mt-3 flex justify-center gap-2">
+                            <button onclick="viewBarcode('${p.db_id}')" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition flex items-center justify-center" title="Download Barcode"><i class="fas fa-download"></i></button>
+                            <button onclick="editProduct('${p.db_id}')" class="w-8 h-8 rounded-lg bg-blue-100 text-primary hover:bg-blue-200 transition flex items-center justify-center" title="Edit"><i class="fas fa-pen"></i></button>
+                            <button onclick="deleteProductFromCloud('${p.db_id}')" class="w-8 h-8 rounded-lg bg-red-100 text-danger hover:bg-red-200 transition flex items-center justify-center" title="Hapus"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+
         // --- UTILS ---
         const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
         const closeModal = (id) => document.getElementById(id).classList.add('hidden');
@@ -675,61 +740,51 @@ function downloadBarcodeImg() {
         // --- PHYSICAL SCANNER LOGIC (GLOBAL LISTENER) ---
         let barcodeBuffer = "";
         let barcodeLastKeyTime = 0;
-        const BARCODE_DELAY = 100; // Toleransi waktu antar ketukan keyboard (Scanner cepat)
+        const BARCODE_DELAY = 100;
 
         document.addEventListener('keydown', (e) => {
             const now = Date.now();
             const target = e.target;
             
-            // Cek apakah fokus sedang di input text biasa (selain search utama)
             const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
             const isMainSearch = target.id === 'search-product';
             
-            // Jika user mengetik manual di kolom input lain, jangan anggap barcode
             if (isInput && !isMainSearch) {
                  return;
             }
 
-            // Scanner biasanya mengirim 'Enter' di akhir scan
             if (e.key === 'Enter') {
                 if (barcodeBuffer.length > 2) { 
                     handleBarcodeScan(barcodeBuffer);
-                    
-                    // Reset kolom search jika scanner mengisinya
                     if (isMainSearch) {
                         target.value = "";
                         renderProducts(); 
                     }
                 }
-                barcodeBuffer = ""; // Reset buffer
+                barcodeBuffer = "";
                 return;
             }
 
-            // Reset buffer jika jeda terlalu lama (ketikan manual manusia)
             if (now - barcodeLastKeyTime > BARCODE_DELAY) {
                 if (barcodeBuffer.length > 0) barcodeBuffer = "";
             }
 
-            // Simpan karakter
             if (e.key.length === 1) { 
                 barcodeBuffer += e.key;
             }
             barcodeLastKeyTime = now;
         });
 
-        // --- HANDLE SCAN BARCODE ---
         function handleBarcodeScan(code) {
             const p = window.products.find(x => x.barcode === code);
             
             if(p) {
-                // PRODUK DITEMUKAN: Masukkan keranjang
                 playBeep();
-                addToCart(p); // Langsung tambah dan update UI
+                addToCart(p);
             } else {
-                // PRODUK BARU (BELUM TERDAFTAR): Buka modal tambah produk
                 playBeep();
                 openManageProduct();
-                document.getElementById('add-code').value = code; // Isi otomatis barcode
+                document.getElementById('add-code').value = code; 
                 showToast("Produk baru terdeteksi! Silakan isi nama.");
             }
         }
@@ -760,6 +815,12 @@ function downloadBarcodeImg() {
             const container = document.getElementById('product-list');
             container.innerHTML = "";
             
+            // Hide loading indicator if array is present
+            if(window.products) {
+                const loader = document.getElementById('loading-indicator');
+                if(loader) loader.style.display = 'none';
+            }
+
             if(!window.products) return;
             const filtered = window.products.filter(p => (activeCategory === 'all' || p.category === activeCategory) && (p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.includes(q))));
             
@@ -837,7 +898,6 @@ function downloadBarcodeImg() {
             const exist = cart.find(i => i.key === itemKey);
             if(exist) exist.qty++; else cart.push({ key: itemKey, db_id: p.db_id, name: p.name, price: finalPrice, qty: 1, note: note, category: p.category });
             
-            // UPDATE: Panggil renderCart segera agar total harga langsung berubah
             renderCart(); 
             updateCartUI();
             showToast("Masuk Keranjang");
@@ -938,9 +998,9 @@ function downloadBarcodeImg() {
                 customer: name,
                 instansi: inst,
                 items: [...cart],
-                subtotal: subtotal, // Save Subtotal
-                ppn: ppn,           // Save Tax
-                pph: pph,           // Save Tax
+                subtotal: subtotal,
+                ppn: ppn,           
+                pph: pph,           
                 total: total,
                 status: isHutang ? 'HUTANG' : 'LUNAS',
                 isSiplah: window.isSiplahMode
@@ -950,24 +1010,22 @@ function downloadBarcodeImg() {
             cart = []; 
             document.getElementById('cust-name').value=""; 
             document.getElementById('cust-instansi').value=""; 
-            // Reset Toggle
+            
             window.isSiplahMode = false;
             document.getElementById('siplah-toggle').checked = false;
             
             updateCartUI(); 
             renderCart();
             
-            // SHOW RECEIPT MODAL FIRST
             showReceiptModal(trx);
         }
 
-        // --- RECEIPT LOGIC (MODERN DANA STYLE V11) ---
+        // --- RECEIPT LOGIC ---
         let currentTrxForPrint = null;
 
         function showReceiptModal(trx) {
             currentTrxForPrint = trx;
             
-            // 1. Set Colors & Icons based on Status
             const headerBg = document.getElementById('receipt-header-bg');
             const statusText = document.getElementById('receipt-status-text');
             
@@ -979,13 +1037,11 @@ function downloadBarcodeImg() {
                 statusText.innerText = 'Menunggu Pembayaran';
             }
 
-            // 2. Set Data Info
             document.getElementById('receipt-date-top').innerText = new Date(trx.timestamp).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' });
             document.getElementById('receipt-total-display').innerText = formatRupiah(trx.total);
             document.getElementById('receipt-id-display').innerText = '#' + trx.id;
             document.getElementById('receipt-cust-display').innerText = trx.customer + (trx.instansi !== '-' ? ` (${trx.instansi})` : '');
 
-            // 3. Render Items List
             const listContainer = document.getElementById('receipt-items-list');
             listContainer.innerHTML = trx.items.map(i => `
                 <div class="flex justify-between text-xs py-1.5">
@@ -997,7 +1053,6 @@ function downloadBarcodeImg() {
                 </div>
             `).join('');
 
-            // 4. Render Tax Info (SIPLAH)
             const taxContainer = document.getElementById('receipt-tax-list');
             if (trx.isSiplah) {
                 taxContainer.classList.remove('hidden');
@@ -1023,10 +1078,9 @@ function downloadBarcodeImg() {
             
             const element = document.getElementById('receipt-modal-content');
             
-            // Teknik untuk hasil tajam & ukuran pas (seperti screenshot HP)
             html2canvas(element, { 
-                scale: 3, // High Res
-                backgroundColor: null, // Transparan corner
+                scale: 3, 
+                backgroundColor: null,
                 useCORS: true
             }).then(canvas => {
                 const link = document.createElement('a');
@@ -1064,7 +1118,7 @@ function downloadBarcodeImg() {
         function calcResult() { try { calcVal = eval(calcVal).toString(); updateCalcDisplay(); } catch(e) { calcVal = "Error"; updateCalcDisplay(); setTimeout(calcClear, 1000); } }
         function updateCalcDisplay() { document.getElementById('calc-display').innerText = calcVal; }
 
-        // --- RIWAYAT & ACTIONS (Old history adapter) ---
+        // --- RIWAYAT ---
         function renderHistory() {
             const q = document.getElementById('search-hist').value.toLowerCase();
             const c = document.getElementById('hist-body');
@@ -1073,7 +1127,6 @@ function downloadBarcodeImg() {
             const filtered = window.transactions.filter(t => t.customer.toLowerCase().includes(q) || t.id.includes(q));
             
             c.innerHTML = filtered.map(t => {
-                // Compatibility for old transactions without subtotal fields
                 if(!t.subtotal) { t.subtotal = t.total; t.ppn = 0; t.pph = 0; t.isSiplah = false; }
                 const jsonTrx = JSON.stringify(t).replace(/"/g, '&quot;');
                 
@@ -1125,7 +1178,6 @@ function downloadBarcodeImg() {
                         <div class="text-right"><div class="font-black text-xl text-danger">${formatRupiah(g.total)}</div></div>
                     </div>
                     
-                    <!-- Mini List with SIPLAH Toggle -->
                     <div class="bg-red-50/50 rounded-xl p-3 text-[10px] space-y-2 mb-3 max-h-32 overflow-y-auto border border-red-50">
                         ${g.items.map(t => `
                             <div class="flex justify-between items-center text-slate-600 border-b border-dashed border-red-200 last:border-0 pb-1">
@@ -1146,10 +1198,9 @@ function downloadBarcodeImg() {
         // --- MANAGE PRODUCT ---
         function openManageProduct() { document.getElementById('modal-prod-title').innerText = "Tambah Produk"; document.getElementById('edit-db-id').value = ""; document.getElementById('add-name').value = ""; document.getElementById('add-price').value = ""; document.getElementById('add-code').value = ""; showModal('modal-add-prod'); }
         function editProduct(dbId) { const p = window.products.find(x => x.db_id === dbId); if(!p) return; document.getElementById('modal-prod-title').innerText = "Edit Produk"; document.getElementById('edit-db-id').value = p.db_id; document.getElementById('add-name').value = p.name; document.getElementById('add-price').value = p.price; document.getElementById('add-cat').value = p.category; document.getElementById('add-code').value = p.barcode; showModal('modal-add-prod'); }
-        function saveProduct() { const name = document.getElementById('add-name').value; const price = document.getElementById('add-price').value; const cat = document.getElementById('add-cat').value; const code = document.getElementById('add-code').value || Math.floor(Math.random()*10000000).toString(); const dbId = document.getElementById('edit-db-id').value; if(!name) return alert("Nama wajib diisi"); const data = { barcode: code, name: name, price: parseInt(price) || 0, category: cat }; window.saveProductToCloud(data, dbId ? dbId : null); }
         function startScanner() { alert("Fitur Scan Kamera aktif di HP. Pastikan izin kamera diberikan."); }
         
-        // --- BARCODE GENERATOR & DOWNLOAD (DIPERBAIKI) ---
+        // --- BARCODE GENERATOR & DOWNLOAD ---
         function viewBarcode(dbId) {
             const p = window.products.find(x => x.db_id === dbId);
             if(!p) return;
@@ -1159,13 +1210,12 @@ function downloadBarcodeImg() {
             document.getElementById('barcode-text').innerText = p.barcode;
             
             try {
-                // Generate garis barcode menggunakan JsBarcode
                 JsBarcode("#barcode-svg", p.barcode, {
                     format: "CODE128",
                     lineColor: "#000",
                     width: 2,
                     height: 50,
-                    displayValue: false, // Kita buat teks manual agar lebih rapi
+                    displayValue: false, 
                     margin: 0
                 });
                 showModal('modal-barcode');
@@ -1189,30 +1239,10 @@ function downloadBarcodeImg() {
                 showToast("Barcode Disimpan");
             });
         }
-
-        // --- RENDER DATABASE UPDATED ---
-        function renderDatabase() { 
-            const c = document.getElementById('db-list'); 
-            if(!window.products) return; 
-            document.getElementById('db-total-count').innerText = window.products.length + " Item"; 
-            
-            // Grid responsif sudah diatur di class parent: grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4
-            c.innerHTML = window.products.map(p => `
-                <div class="bg-white p-3 rounded-2xl border border-blue-50 text-center text-xs hover:shadow-md transition group relative overflow-hidden flex flex-col justify-between h-full min-h-[140px]">
-                    <div>
-                        <div class="font-bold text-slate-700 text-sm mb-1 leading-tight break-words" title="${p.name}">${p.name}</div>
-                        <div class="text-secondary font-black text-lg mb-1">${formatRupiah(p.price)}</div>
-                        <!-- Font Barcode Visual -->
-                        <div class="font-barcode text-slate-800 text-4xl leading-none overflow-hidden" title="${p.barcode || ''}">${p.barcode || ''}</div>
-                        <div class="text-[9px] font-mono text-slate-400 mt-1">${p.barcode || '-'}</div>
-                    </div>
-                    <div class="mt-3 flex justify-center gap-2">
-                        <button onclick="viewBarcode('${p.db_id}')" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition flex items-center justify-center" title="Download Barcode"><i class="fas fa-download"></i></button>
-                        <button onclick="editProduct('${p.db_id}')" class="w-8 h-8 rounded-lg bg-blue-100 text-primary hover:bg-blue-200 transition flex items-center justify-center" title="Edit"><i class="fas fa-pen"></i></button>
-                    </div>
-                </div>
-            `).join(''); 
-        }
+        
+        // Memanggil render pertama kali saat dibuka
+        renderProducts();
+        
     </script>
 </body>
 </html>
