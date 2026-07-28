@@ -36,231 +36,71 @@
         // FIX: Gunakan __app_id global jika ada untuk mematuhi peraturan keselamatan
         const APP_ID_CABANG = typeof __app_id !== 'undefined' ? __app_id : "toko-pusat"; 
 
-        // SYSTEM LOGIC
-        let appMode = 'LOCAL';
-        let db, auth;
-        let configToUse = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : MY_FIREBASE_CONFIG;
+       // --- 1. FUNGSI SIMPAN PRODUK (MENGHUBUNGKAN MODAL KE FIREBASE/LOKAL) ---
+function saveProduct() {
+    const name = document.getElementById('add-name').value.trim();
+    const price = parseFloat(document.getElementById('add-price').value) || 0;
+    const category = document.getElementById('add-cat').value;
+    const barcode = document.getElementById('add-code').value.trim();
+    const editId = document.getElementById('edit-db-id').value;
 
-        window.products = [];
-        window.transactions = [];
-        window.cart = [];
-        window.user = null;
-        window.isSiplahMode = false;
+    if (!name) return alert("Nama barang wajib diisi!");
 
-        // --- INISIALISASI ---
-        async function initSystem() {
-            const badge = document.getElementById('status-badge');
-            if (configToUse) {
-                try {
-                    const app = initializeApp(configToUse);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-                    appMode = 'CLOUD';
+    const prodData = {
+        name: name,
+        price: price,
+        category: category,
+        barcode: barcode
+    };
 
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
+    window.saveProductToCloud(prodData, editId || null);
+}
 
-                    onAuthStateChanged(auth, (u) => {
-                        if (u) {
-                            window.user = u;
-                            if(badge) {
-                                badge.innerText = "ONLINE";
-                                badge.className = "text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full ml-2 font-bold shadow-sm";
-                            }
-                            listenToProducts();
-                            listenToTransactions();
-                        }
-                    });
-                } catch (e) {
-                    console.error(" Init Error:", e);
-                    initLocalMode();
-                }
-            } else {
-                initLocalMode();
-            }
-        }
+// --- 2. FUNGSI RENDER DATABASE PRODUK (TAB PRODUK) ---
+function renderDatabase() {
+    const dbList = document.getElementById('db-list');
+    const dbCount = document.getElementById('db-total-count');
+    if (!dbList || !window.products) return;
 
-        function initLocalMode() {
-            appMode = 'LOCAL';
-            const badge = document.getElementById('status-badge');
-            if(badge) {
-                badge.innerText = "OFFLINE";
-                badge.className = "text-[10px] bg-slate-500 text-white px-2 py-0.5 rounded-full ml-2 font-bold shadow-sm";
-            }
-            loadLocalData();
-            const loader = document.getElementById('loading-indicator');
-            if (loader) {
-                loader.innerHTML = '<p class="text-xs italic text-slate-400">Mode Lokal Aktif</p>';
-            }
-        }
+    if (dbCount) dbCount.innerText = `${window.products.length} Item`;
+    dbList.innerHTML = "";
 
-        window.addEventListener('load', initSystem);
+    if (window.products.length === 0) {
+        dbList.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 font-bold italic">Belum ada data produk.</div>`;
+        return;
+    }
 
-        // --- DATA HANDLER ---
-        function listenToProducts() {
-            if(appMode !== 'CLOUD') return;
-            const colRef = collection(db, 'artifacts', APP_ID_CABANG, 'public', 'data', 'products');
-            onSnapshot(colRef, (snap) => {
-                window.products = [];
-                snap.forEach((doc) => window.products.push({ db_id: doc.id, ...doc.data() }));
-                window.products.sort((a, b) => a.name.localeCompare(b.name));
-                renderProducts();
-                renderDatabase();
-            }, (error) => {
-                console.warn("Product Read Error:", error.code);
-                initLocalMode();
-            });
-        }
+    window.products.forEach(p => {
+        dbList.innerHTML += `
+            <div class="bg-white p-4 rounded-2xl border border-blue-50 shadow-sm flex justify-between items-center hover:shadow-md transition">
+                <div>
+                    <span class="text-[9px] font-extrabold px-2 py-0.5 rounded bg-blue-100 text-primary uppercase">${p.category}</span>
+                    <h4 class="font-bold text-sm text-slate-800 mt-1">${p.name}</h4>
+                    <p class="text-xs text-slate-400 font-mono"><i class="fas fa-barcode mr-1"></i>${p.barcode || '-'}</p>
+                    <p class="text-xs font-black text-secondary mt-1">${formatRupiah(p.price)}</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="editProduct('${p.db_id}')" class="w-8 h-8 rounded-lg bg-blue-50 text-primary flex items-center justify-center hover:bg-blue-100" title="Edit"><i class="fas fa-pen text-xs"></i></button>
+                    <button onclick="deleteProductFromCloud('${p.db_id}')" class="w-8 h-8 rounded-lg bg-red-50 text-danger flex items-center justify-center hover:bg-red-100" title="Hapus"><i class="fas fa-trash text-xs"></i></button>
+                </div>
+            </div>
+        `;
+    });
+}
 
-        function listenToTransactions() {
-            if(appMode !== 'CLOUD') return;
-            const colRef = collection(db, 'artifacts', APP_ID_CABANG, 'public', 'data', 'transactions');
-            onSnapshot(colRef, (snap) => {
-                window.transactions = [];
-                snap.forEach((doc) => window.transactions.push({ db_id: doc.id, ...doc.data() }));
-                window.transactions.sort((a, b) => b.timestamp - a.timestamp);
-                renderHistory();
-                renderDebtBook();
-            }, (error) => {
-                // FIX: Tambahkan callback error untuk mengelakkan 'Uncaught Error'
-                console.warn("Transaction Read Error:", error.code);
-            });
-        }
-
-        function loadLocalData() {
-            try {
-                const p = localStorage.getItem('dj_prods');
-                const t = localStorage.getItem('dj_trx');
-                window.products = p ? JSON.parse(p) : [];
-                window.transactions = t ? JSON.parse(t) : [];
-                renderProducts(); renderDatabase(); renderHistory(); renderDebtBook();
-            } catch(e) {}
-        }
-
-        function saveLocalData() {
-            localStorage.setItem('dj_prods', JSON.stringify(window.products));
-            localStorage.setItem('dj_trx', JSON.stringify(window.transactions));
-            renderProducts(); renderDatabase(); renderHistory(); renderDebtBook();
-        }
-
-        // --- GLOBAL ACTIONS ---
-        window.saveProductToCloud = async (prodData, dbId = null) => {
-            if (appMode === 'CLOUD') {
-                if(!window.user) return;
-                const colRef = collection(db, 'artifacts', APP_ID_CABANG, 'public', 'data', 'products');
-                try {
-                    dbId ? await updateDoc(doc(db, 'artifacts', APP_ID_CABANG, 'public', 'data', 'products', dbId), prodData) : await addDoc(colRef, prodData);
-                    closeModal('modal-add-prod'); showToast("Produk Disimpan");
-                } catch(e) { alert("Gagal Simpan: " + e.message); }
-            } else {
-                const newId = dbId || 'loc_' + Date.now();
-                const newItem = { db_id: newId, ...prodData };
-                if(dbId) {
-                    const idx = window.products.findIndex(p => p.db_id === dbId);
-                    if(idx > -1) window.products[idx] = newItem;
-                } else { window.products.push(newItem); }
-                saveLocalData(); closeModal('modal-add-prod'); showToast("Produk Tersimpan (Lokal)");
-            }
-        };
-
-        window.deleteProductFromCloud = async (dbId) => {
-            if(!confirm("Hapus produk ini permanen?")) return;
-            if (appMode === 'CLOUD') {
-                try { await deleteDoc(doc(db, 'artifacts', APP_ID_CABANG, 'public', 'data', 'products', dbId)); showToast("Produk Dihapus"); } catch(e) { alert(e.message); }
-            } else {
-                window.products = window.products.filter(p => p.db_id !== dbId); saveLocalData(); showToast("Produk Dihapus");
-            }
-        }
-
-        window.pushTransactionToCloud = async (trxData) => {
-            if (appMode === 'CLOUD') {
-                try { await addDoc(collection(db, 'artifacts', APP_ID_CABANG, 'public', 'data', 'transactions'), trxData); } 
-                catch(e) { 
-                    const newTrx = { db_id: 'loc_trx_' + Date.now(), ...trxData };
-                    window.transactions.unshift(newTrx); saveLocalData();
-                    showToast("Offline: Transaksi disimpan lokal");
-                }
-            } else {
-                const newTrx = { db_id: 'loc_trx_' + Date.now(), ...trxData };
-                window.transactions.unshift(newTrx); saveLocalData();
-            }
-        }
-
-        window.deleteTransaction = async (dbId) => {
-            if(!confirm("Hapus data transaksi ini?")) return;
-            if(appMode === 'CLOUD') {
-                try { await deleteDoc(doc(db, 'artifacts', APP_ID_CABANG, 'public', 'data', 'transactions', dbId)); showToast("Data dihapus"); } catch(e) { alert(e.message); }
-            } else {
-                window.transactions = window.transactions.filter(t => t.db_id !== dbId); saveLocalData(); showToast("Data dihapus");
-            }
-        }
-
-        window.deleteAllHistory = async () => {
-            const pwd = prompt("Masukkan PIN Keamanan untuk menghapus SEMUA Riwayat:");
-            if(pwd !== "123456") return alert("PIN Salah!"); 
-
-            if(confirm("YAKIN HAPUS SEMUA DATA TRANSAKSI? Data tidak bisa kembali!")) {
-                if(appMode === 'CLOUD') {
-                    showToast("Sedang menghapus...");
-                    try {
-                        const q = query(collection(db, 'artifacts', APP_ID_CABANG, 'public', 'data', 'transactions'));
-                        const snap = await getDocs(q);
-                        const batch = writeBatch(db);
-                        snap.forEach((d) => batch.delete(d.ref));
-                        await batch.commit();
-                        showToast("Semua Riwayat Cloud Dihapus");
-                    } catch(e) { alert("Gagal hapus cloud: " + e.message); }
-                } else {
-                    window.transactions = [];
-                    saveLocalData();
-                    showToast("Semua Riwayat Lokal Dihapus");
-                }
-            }
-        }
-
-        window.updateTransactionStatusCloud = async (dbId, newStatus) => {
-            if (appMode === 'CLOUD') {
-                try { await updateDoc(doc(db, 'artifacts', APP_ID_CABANG, 'public', 'data', 'transactions', dbId), { status: newStatus }); } catch(e) {}
-            } else {
-                const t = window.transactions.find(x => x.db_id === dbId);
-                if(t) { t.status = newStatus; saveLocalData(); }
-            }
-        }
-        
-        window.toggleTransactionSiplah = async (dbId) => {
-            const t = window.transactions.find(x => x.db_id === dbId);
-            if (!t) return;
-            let subtotal = t.subtotal || t.items.reduce((s, i) => s + (i.price * i.qty), 0);
-            const newIsSiplah = !t.isSiplah;
-            let newPpn = 0, newPph = 0;
-            let newTotal = subtotal;
-            if (newIsSiplah) {
-                newPpn = Math.floor(subtotal * 0.11);
-                newPph = Math.floor(subtotal * 0.015);
-                newTotal = subtotal + newPpn + newPph;
-            }
-            const updateData = { isSiplah: newIsSiplah, subtotal: subtotal, ppn: newPpn, pph: newPph, total: newTotal };
-            if (appMode === 'CLOUD') {
-                try { await updateDoc(doc(db, 'artifacts', APP_ID_CABANG, 'public', 'data', 'transactions', dbId), updateData); showToast(newIsSiplah ? "Diubah ke SIPLAH" : "Diubah ke Reguler"); } catch (e) { alert("Error update: " + e.message); }
-            } else {
-                Object.assign(t, updateData); saveLocalData(); showToast(newIsSiplah ? "Diubah ke SIPLAH" : "Diubah ke Reguler");
-            }
-        }
-        
-        window.payBulkDebtCloud = async (customerName) => {
-            if (appMode === 'CLOUD') {
-                const debts = window.transactions.filter(t => t.customer === customerName && t.status === 'HUTANG');
-                for(let t of debts) { try { await updateDoc(doc(db, 'artifacts', APP_ID_CABANG, 'public', 'data', 'transactions', t.db_id), { status: 'LUNAS' }); } catch(e) {} }
-            } else {
-                window.transactions.forEach(t => { if(t.customer === customerName && t.status === 'HUTANG') t.status = 'LUNAS'; }); saveLocalData();
-            }
-            showToast("Hutang Lunas");
-        }
-    </script>
+// --- 3. FUNGSI DOWNLOAD BARCODE IMAGE ---
+function downloadBarcodeImg() {
+    const container = document.getElementById('barcode-container');
+    if (!container) return;
     
+    html2canvas(container, { scale: 3, backgroundColor: "#ffffff" }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Barcode-${document.getElementById('barcode-name').innerText}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        showToast("Barcode berhasil di-download");
+    });
+}
     <script>
         tailwind.config = {
             theme: {
