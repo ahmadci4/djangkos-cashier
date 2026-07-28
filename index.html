@@ -14,37 +14,138 @@
     <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+128&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- FIREBASE SDK -->
+    <!-- FIREBASE SDK & REALTIME LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, writeBatch, doc, onSnapshot, query, orderBy, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // KONFIGURASI FIREBASE (Ganti dengan config Anda jika perlu)
+        // 1. MASUKKAN CONFIG FIREBASE ANDA DI SINI
         const firebaseConfig = {
-            apiKey: "AIzaSyAxa8fCsxRNucYgPlisQ_HmsUle_KbEVCg",
-            authDomain: "djangkos-pembukuan.firebaseapp.com",
-            projectId: "djangkos-pembukuan",
+            apiKey: "AIzaSyAxa8fCsxRNucYgPlisQ_HmsUle_KbEVCg", // PASTIKAN INI BENAR
+            authDomain: "djangkos-pembukuan.firebaseapp.com",    // SESUAIKAN DENGAN PROJECT ANDA
+            projectId: "djangkos-pembukuan",                     // SESUAIKAN DENGAN PROJECT ANDA
             storageBucket: "djangkos-pembukuan.firebasestorage.app",
             messagingSenderId: "86644995124",
-            appId: "1:86644995124:web:697945eacae29a6cdf4661",
-            measurementId: "G-35R4QNX2V0"
+            appId: "1:86644995124:web:697945eacae29a6cdf4661"
         };
         
-        // Inisialisasi Firebase (Di-comment sementara agar tidak error saat UI di test jika rules belum di set)
-        // const app = initializeApp(firebaseConfig);
-        // const db = getFirestore(app);
+        // 2. INISIALISASI FIREBASE
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        const FIREBASE_DOC_PATH = "djangkos_db/main_state"; 
-        const IS_DUMMY = firebaseConfig.apiKey === "DUMMY_API_KEY";
+        // Referensi Koleksi di Database
+        const colProducts = collection(db, "produk");
+        const colTransactions = collection(db, "transaksi");
 
-        const APP_ID_CABANG = typeof __app_id !== 'undefined' ? __app_id : "toko-pusat"; 
+        // =========================================================================
+        // 3. FITUR SINKRONISASI REAL-TIME (MENDENGARKAN PERUBAHAN DI SEMUA PERANGKAT)
+        // =========================================================================
         
-        /* 
-         * FIX BUG 1: Fungsi-fungsi UI seperti saveProduct, renderDatabase tidak boleh berada 
-         * di dalam <script type="module"> jika dipanggil langsung dari HTML (onclick).
-         * Saya telah memindahkannya ke tag <script> biasa di bawah.
-         */
+        // A. Tarik & Sinkronkan Data Produk Real-time
+        onSnapshot(query(colProducts), (snapshot) => {
+            window.products = []; // Kosongkan array lokal
+            snapshot.forEach((document) => {
+                // Masukkan data dari cloud ke array lokal
+                window.products.push({ db_id: document.id, ...document.data() });
+            });
+            
+            // Hilangkan loading dan render ulang tampilan
+            const loader = document.getElementById('loading-indicator');
+            if(loader) loader.style.display = 'none';
+            
+            if(typeof renderProducts === 'function') renderProducts();
+            if(typeof renderDatabase === 'function') renderDatabase();
+        }, (error) => {
+            console.error("Error mendengarkan produk:", error);
+        });
+
+        // B. Tarik & Sinkronkan Data Transaksi (Riwayat & Hutang) Real-time, urutkan dari yang terbaru
+        onSnapshot(query(colTransactions, orderBy("timestamp", "desc")), (snapshot) => {
+            window.transactions = [];
+            snapshot.forEach((document) => {
+                window.transactions.push({ db_id: document.id, ...document.data() });
+            });
+            
+            if(typeof renderHistory === 'function') renderHistory();
+            if(typeof renderDebtBook === 'function') renderDebtBook();
+        }, (error) => {
+            console.error("Error mendengarkan transaksi:", error);
+        });
+
+
+        // =========================================================================
+        // 4. MENGGANTI FUNGSI MOCK (LOKAL) MENJADI FUNGSI CLOUD FIRESTORE
+        // =========================================================================
+
+        // Simpan atau Update Produk ke Cloud
+        window.saveProductToCloud = async function(data, editId) {
+            try {
+                if(editId) {
+                    await updateDoc(doc(db, "produk", editId), data);
+                } else {
+                    await addDoc(colProducts, data);
+                }
+                // Catatan: Tidak perlu memanggil renderProducts() lagi karena onSnapshot akan otomatis merespon perubahan ini!
+                if(typeof closeModal === 'function') closeModal('modal-add-prod');
+                if(typeof showToast === 'function') showToast("Produk Disimpan ke Cloud!");
+            } catch (error) {
+                console.error("Error Simpan Produk:", error);
+                alert("Gagal menyimpan produk ke server.");
+            }
+        };
+
+        // Hapus Produk dari Cloud
+        window.deleteProductFromCloud = async function(dbId) {
+            if(confirm("Yakin ingin menghapus produk ini dari semua perangkat?")) {
+                try {
+                    await deleteDoc(doc(db, "produk", dbId));
+                    if(typeof showToast === 'function') showToast("Produk Dihapus");
+                } catch (error) {
+                    console.error("Error Hapus Produk:", error);
+                }
+            }
+        };
+
+        // Simpan Transaksi Baru ke Cloud
+        window.pushTransactionToCloud = async function(trx) {
+            try {
+                await addDoc(colTransactions, trx);
+            } catch (error) {
+                console.error("Error Simpan Transaksi:", error);
+                alert("Gagal memproses transaksi. Cek koneksi internet.");
+            }
+        };
+
+        // Ubah Status LUNAS / HUTANG di Cloud
+        window.updateTransactionStatusCloud = async function(dbId, newStatus) {
+            try {
+                await updateDoc(doc(db, "transaksi", dbId), { status: newStatus });
+                if(typeof showToast === 'function') showToast("Status Berhasil Diubah");
+            } catch (error) {
+                console.error("Error Update Status:", error);
+            }
+        };
+        
+        // Pelunasan Hutang Massal (Batch Write)
+        window.payBulkDebtCloud = async function(customerName) {
+            if(confirm(`Lunasi semua hutang atas nama ${customerName} di sistem?`)) {
+                try {
+                    const batch = writeBatch(db);
+                    const hutangUser = window.transactions.filter(t => t.customer === customerName && t.status === 'HUTANG');
+                    
+                    hutangUser.forEach(trx => {
+                        const trxRef = doc(db, "transaksi", trx.db_id);
+                        batch.update(trxRef, { status: 'LUNAS' });
+                    });
+                    
+                    await batch.commit();
+                    if(typeof showToast === 'function') showToast("Hutang Berhasil Dilunasi!");
+                } catch (error) {
+                    console.error("Error Pelunasan Massal:", error);
+                }
+            }
+        }
+        
     </script>
     <script>
         tailwind.config = {
