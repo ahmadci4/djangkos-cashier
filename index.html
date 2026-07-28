@@ -21,15 +21,17 @@
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, writeBatch, doc, onSnapshot, query, orderBy, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // KONFIGURASI FIREBASE (Ganti dengan config Anda jika perlu)
-        const MY_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyBunV_1mxNEcWxMtfVMHFYFCFtUbv0htXw",
-            authDomain: "d-jangkos-smart-cashier.firebaseapp.com",
-            projectId: "d-jangkos-smart-cashier",
-            storageBucket: "d-jangkos-smart-cashier.firebasestorage.app",
-            messagingSenderId: "410272228488",
-            appId: "1:410272228488:web:7d6177f85e292e229dab3d",
-            measurementId: "G-ZVLHC1HJ7T"
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxa8fCsxRNucYgPlisQ_HmsUle_KbEVCg",
+            authDomain: "djangkos-pembukuan.firebaseapp.com",
+            projectId: "djangkos-pembukuan",
+            storageBucket: "djangkos-pembukuan.firebasestorage.app",
+            messagingSenderId: "86644995124",
+            appId: "1:86644995124:web:697945eacae29a6cdf4661",
+            measurementId: "G-35R4QNX2V0"
         };
+        const FIREBASE_DOC_PATH = "djangkos_db/main_state"; 
+        const IS_DUMMY = firebaseConfig.apiKey === "DUMMY_API_KEY";
 
         // FIX: Gunakan __app_id global jika ada untuk mematuhi peraturan keselamatan
         const APP_ID_CABANG = typeof __app_id !== 'undefined' ? __app_id : "toko-pusat"; 
@@ -73,7 +75,7 @@
                         }
                     });
                 } catch (e) {
-                    console.error("Firebase Init Error:", e);
+                    console.error(" Init Error:", e);
                     initLocalMode();
                 }
             } else {
