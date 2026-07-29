@@ -1457,16 +1457,8 @@
                         <div class="text-secondary font-black text-lg mb-2">${formatRupiah(p.price)}</div>
                         <div class="font-barcode text-slate-800 text-4xl leading-none overflow-hidden py-1" title="${p.barcode || ''}">${p.barcode || ''}</div>
                         <div class="text-[9px] font-mono text-slate-400 mt-1">${p.barcode || '-'}</div>
-                    </div>
+                   <!-- ... existing code ... -->
                     <div class="mt-4 flex justify-center gap-2">
-                        <button onclick="viewBarcode('${p.db_id}')" class="flex-1 py-1.5 rounded-lg bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition flex items-center justify-center gap-1" title="Download Barcode"><i class="fas fa-barcode"></i> Barcode</button>
-                        <button onclick="editProduct('${p.db_id}')" class="w-8 h-8 rounded-lg bg-blue-100 text-primary hover:bg-blue-200 transition flex items-center justify-center" title="Edit"><i class="fas fa-pen"></i></button>
-                    </div>
-                </div>
-            `).join(''); 
-        }
-    </script>
-           <div class="mt-4 flex justify-center gap-2">
                         <button onclick="viewBarcode('${p.db_id}')" class="flex-1 py-1.5 rounded-lg bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition flex items-center justify-center gap-1" title="Download Barcode"><i class="fas fa-barcode"></i> Barcode</button>
                         <button onclick="editProduct('${p.db_id}')" class="w-8 h-8 rounded-lg bg-blue-100 text-primary hover:bg-blue-200 transition flex items-center justify-center" title="Edit"><i class="fas fa-pen"></i></button>
                     </div>
@@ -1487,6 +1479,5 @@
             });
         }
     </script>
-                    
 </body>
 </html>
