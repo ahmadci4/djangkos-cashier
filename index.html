@@ -1231,28 +1231,49 @@
         }
 
                 function actionDownload() {
-            if (!currentTrxForPrint) return;
-        
-            const element = document.getElementById("receipt-modal-content");
-        
-            // Simpan style asli
-            const oldHeight = element.style.height;
-            const oldOverflow = element.style.overflow;
-            const oldMaxHeight = element.style.maxHeight;
-        
-            // Buka semua isi nota agar tidak terpotong
-            element.style.height = "auto";
-            element.style.maxHeight = "none";
-            element.style.overflow = "visible";
-        
-            html2canvas(element, {
-                scale: 3,
-                useCORS: true,
-                backgroundColor: "#ffffff",
-                scrollY: 0,
-                windowWidth: element.scrollWidth,
-                windowHeight: element.scrollHeight
-            }).then(canvas => {
+    if (!currentTrxForPrint) return;
+
+    const original = document.getElementById("receipt-modal-content");
+
+    // Clone nota
+    const clone = original.cloneNode(true);
+
+    clone.style.position = "fixed";
+    clone.style.left = "-10000px";
+    clone.style.top = "0";
+    clone.style.width = "320px";
+    clone.style.maxWidth = "320px";
+    clone.style.height = "auto";
+    clone.style.maxHeight = "none";
+    clone.style.overflow = "visible";
+    clone.style.zIndex = "999999";
+    clone.style.background = "#fff";
+
+    // Hapus semua pembatas tinggi pada clone
+    clone.querySelectorAll("*").forEach(el => {
+        el.style.maxHeight = "none";
+        el.style.height = "auto";
+        el.style.overflow = "visible";
+    });
+
+    document.body.appendChild(clone);
+
+    html2canvas(clone, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+    }).then(canvas => {
+
+        document.body.removeChild(clone);
+
+        const link = document.createElement("a");
+        link.download = `Nota-DJangkos-${currentTrxForPrint.customer}-${currentTrxForPrint.id}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+
+        showToast("Gambar Nota Tersimpan!");
+    });
+}
         
                 // Kembalikan style semula
                 element.style.height = oldHeight;
