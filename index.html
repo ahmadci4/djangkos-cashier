@@ -712,7 +712,7 @@
                     </div>
 
                     <!-- Body Content -->
-                    <div class="receipt-body bg-white rounded-t-[2.5rem] -mt-8 relative p-5 pt-8 z-10">
+                    <div class="receipt-body bg-white rounded-t-[2.5rem] -mt-8 relative p-5 pt-8 z-10 flex flex-col min-h-[540px]">
                         <div class="text-center mb-5">
                             <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Total Pembayaran</p>
                             <h2 class="text-3xl font-black text-slate-800 tracking-tighter" id="receipt-total-display">Rp 0</h2>
@@ -728,9 +728,13 @@
                                 <span class="text-slate-500 font-medium">Pelanggan</span>
                                 <span class="font-bold text-slate-700 text-right w-1/2 truncate" id="receipt-cust-display">...</span>
                             </div>
-                            
-                            <div id="receipt-items-list" class="space-y-2 py-1"></div>
-                            <div id="receipt-tax-list" class="space-y-1 pt-2 border-t border-slate-100 hidden"></div>
+                            <div class="flex-1">
+                                <div id="receipt-items-list" class="space-y-2 py-1"></div>
+
+                                <div id="receipt-tax-list"
+                                 class="space-y-1 pt-2 border-t border-slate-100 hidden">
+                                </div>
+                            </div>
                         </div>
 
                         <div class="text-center">
