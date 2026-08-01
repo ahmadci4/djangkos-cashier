@@ -757,42 +757,71 @@
                     </div>
 
                     <!-- Body Content -->
-                    <div class="receipt-body bg-white rounded-t-[2.5rem] -mt-8 relative p-5 pt-8 z-10 flex flex-col min-h-[540px]">
-                        <div class="text-center mb-5">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Total Pembayaran</p>
-                            <h2 class="text-3xl font-black text-slate-800 tracking-tighter" id="receipt-total-display">Rp 0</h2>
-                            
-                        </div>
-                             
-                        <div class="space-y-3 mb-5">
-                            <div class="flex justify-between text-[11px] border-b border-dashed border-slate-200 pb-2">
-                                <span class="text-slate-500 font-medium">ID Transaksi</span>
-                                <span class="font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded" id="receipt-id-display">#...</span>
-                            </div>
-                            <div class="flex justify-between text-[11px] border-b border-dashed border-slate-200 pb-2">
-                                <span class="text-slate-500 font-medium">Pelanggan</span>
-                                <span class="font-bold text-slate-700 text-right w-1/2 truncate" id="receipt-cust-display">...</span>
-                            </div>
-                            <div class="flex-1">
-                                <div id="receipt-items-list" class="space-y-2 py-1"></div>
-
-                                <div id="receipt-tax-list"
-                                 class="space-y-1 pt-2 border-t border-slate-100 hidden">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="text-center">
-
-                            <div class="inline-flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100">
-                                <div class="w-4 h-4 bg-primary text-white rounded-full flex items-center justify-center text-[7px] font-bold"></div>
-                                <span class="text-[9px] font-bold text-blue-600">www.djangkos.com</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="receipt-body bg-white rounded-t-[2.5rem] -mt-8 relative p-5 pt-8 z-10 flex flex-col min-h-[540px]">
             
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">
+                        Total Pembayaran
+                    </p>
+            
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tighter"
+                        id="receipt-total-display">
+                        Rp 0
+                    </h2>
+                </div>
+            
+                <!-- Info -->
+                <div class="space-y-3">
+            
+                    <div class="flex justify-between text-[11px] border-b border-dashed border-slate-200 pb-2">
+                        <span class="text-slate-500 font-medium">ID Transaksi</span>
+                        <span class="font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded"
+                            id="receipt-id-display">
+                            #...
+                        </span>
+                    </div>
+            
+                    <div class="flex justify-between text-[11px] border-b border-dashed border-slate-200 pb-2">
+                        <span class="text-slate-500 font-medium">Pelanggan</span>
+            
+                        <span class="font-bold text-slate-700 text-right w-1/2 truncate"
+                            id="receipt-cust-display">
+                            ...
+                        </span>
+                    </div>
+            
+                </div>
+            
+                <!-- LIST BARANG -->
+                <div class="flex-1 py-2">
+            
+                    <div id="receipt-items-list"
+                         class="space-y-2">
+                    </div>
+            
+                    <div id="receipt-tax-list"
+                         class="space-y-1 pt-2 border-t border-slate-100 hidden">
+                    </div>
+            
+                </div>
+            
+                <!-- FOOTER -->
+                <div class="text-center pt-4">
+            
+                    <div class="inline-flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100">
+            
+                        <div class="w-4 h-4 bg-primary rounded-full"></div>
+            
+                        <span class="text-[9px] font-bold text-blue-600">
+                            www.djangkos.com
+                        </span>
+            
+                    </div>
+            
+                </div>
+            
+            </div>
             <div id="receipt-actions" class="p-3 bg-slate-800 border-t border-slate-700 flex gap-2 flex-none">
                 <button onclick="actionShare()" class="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold text-xs hover:bg-green-400 transition shadow-lg flex items-center justify-center gap-1.5"><i class="fab fa-whatsapp"></i> SHARE WA</button>
                 <button onclick="actionDownload()" class="flex-1 py-3 bg-blue-500 text-white rounded-xl font-bold text-xs hover:bg-blue-400 transition shadow-lg flex items-center justify-center gap-1.5"><i class="fas fa-download"></i> SIMPAN PNG</button>
@@ -1180,33 +1209,43 @@
             window.print();
         }
 
-        function actionDownload() {
+                function actionDownload() {
             if (!currentTrxForPrint) return;
-            const element = document.getElementById('receipt-modal-content');
-            html2canvas(element, { scale: 3, backgroundColor: null, useCORS: true }).then(canvas => {
-                const link = document.createElement('a');
+        
+            const element = document.getElementById("receipt-modal-content");
+        
+            // Simpan style asli
+            const oldHeight = element.style.height;
+            const oldOverflow = element.style.overflow;
+            const oldMaxHeight = element.style.maxHeight;
+        
+            // Buka semua isi nota agar tidak terpotong
+            element.style.height = "auto";
+            element.style.maxHeight = "none";
+            element.style.overflow = "visible";
+        
+            html2canvas(element, {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: "#ffffff",
+                scrollY: 0,
+                windowWidth: element.scrollWidth,
+                windowHeight: element.scrollHeight
+            }).then(canvas => {
+        
+                // Kembalikan style semula
+                element.style.height = oldHeight;
+                element.style.maxHeight = oldMaxHeight;
+                element.style.overflow = oldOverflow;
+        
+                const link = document.createElement("a");
                 link.download = `Nota-DJangkos-${currentTrxForPrint.customer}-${currentTrxForPrint.id}.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
+        
                 showToast("Gambar Nota Tersimpan!");
             });
-        }
-        
-        function actionShare() {
-            if (!currentTrxForPrint) return;
-            const items = currentTrxForPrint.items.map(i => `${i.name} (x${i.qty})`).join(', ');
-            const text = `*NOTA DIGITAL D'JANGKOS PRINTING*%0A%0A` +
-                         `📅 Tanggal: ${new Date(currentTrxForPrint.timestamp).toLocaleDateString()}%0A` +
-                         `👤 Pelanggan: ${currentTrxForPrint.customer}%0A` +
-                         `🆔 No. Nota: #${currentTrxForPrint.id}%0A` +
-                         `--------------------------------%0A` +
-                         `🛒 Item: ${items}%0A` +
-                         `💰 *TOTAL TAGIHAN: ${formatRupiah(currentTrxForPrint.total)}*%0A` +
-                         `📌 Status: ${currentTrxForPrint.status}%0A` +
-                         `--------------------------------%0A` +
-                         `Terima kasih atas kepercayaan Anda!`;
-            window.open(`https://wa.me/?text=${text}`, '_blank');
-        }
+}
 
         // --- CALCULATOR WIDGET ---
         let calcVal = "0";
