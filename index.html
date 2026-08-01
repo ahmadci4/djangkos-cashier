@@ -246,50 +246,91 @@
         }
 
         /* === KONFIGURASI PRINTER THERMAL (80mm) === */
-        @media print {
-            @page {
-                size: 80mm auto;
-                margin: 0;
-            }
-            body {
-                width: 80mm;
-                background: white;
-                margin: 0;
-                padding: 0;
-            }
-            body > *:not(#modal-receipt) { 
-                display: none !important; 
-            }
-            #modal-receipt {
-                position: absolute;
-                top: 0; left: 0; width: 100%; height: auto;
-                visibility: visible !important; display: block !important;
-                background: white !important; z-index: 9999;
-                padding: 0 !important; margin: 0 !important;
-                overflow: visible !important;
-            }
-            #receipt-modal-content {
-                width: 100% !important; max-width: 100% !important;
-                box-shadow: none !important; border-radius: 0 !important;
-                border: none !important; padding: 5px !important; margin: 0 !important;
-                background: white !important;
-            }
-            .receipt-digital-header { display: none !important; }
-            .receipt-body {
-                padding: 0 !important; margin-top: 0 !important; border-radius: 0 !important;
-            }
-            .print-only { 
-                display: block !important; text-align: center; margin-bottom: 10px;
-                font-family: 'Inconsolata', monospace;
-            }
-            * {
-                font-family: 'Inconsolata', monospace !important;
-                color: black !important; font-size: 12px;
-            }
-            h2#receipt-total-display { font-size: 18px !important; font-weight: bold !important; }
-            #receipt-actions { display: none !important; }
-        }
-    </style>
+        /* === PRINT THERMAL 80mm === */
+@media print {
+
+    @page {
+        size: 80mm auto;
+        margin: 0;
+    }
+
+    html,
+    body {
+        width: 80mm;
+        margin: 0;
+        padding: 0;
+        background: #fff;
+        overflow: visible !important;
+    }
+
+    /* Sembunyikan semua selain modal receipt */
+    body > *:not(#modal-receipt) {
+        display: none !important;
+    }
+
+    /* Tampilkan modal */
+    #modal-receipt {
+        position: absolute !important;
+        inset: 0 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: flex-start !important;
+        background: #fff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+    }
+
+    /* Card receipt */
+    #receipt-modal-content {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 auto !important;
+
+        background: #fff !important;
+
+        box-shadow: none !important;
+        border: none !important;
+
+        overflow: visible !important;
+    }
+
+    /* Header digital tetap tampil */
+    .receipt-digital-header {
+        display: block !important;
+    }
+
+    /* Body jangan diubah */
+    .receipt-body {
+        display: block !important;
+        overflow: visible !important;
+    }
+
+    /* Header print disembunyikan */
+    .print-only {
+        display: none !important;
+    }
+
+    /* Tombol aksi disembunyikan */
+    #receipt-actions {
+        display: none !important;
+    }
+
+    /* Jangan ada animasi */
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    /* Pastikan warna tetap tercetak */
+    body,
+    #receipt-modal-content,
+    .receipt-digital-header,
+    .receipt-body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-slate-800 bg-bg">
 
